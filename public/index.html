@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset='utf-8'>
+	<meta name='viewport' content='width=device-width,initial-scale=1'>
+
+	<title>Svelte app</title>
+
+	<link rel='icon' type='image/png' href='/defualt_image.png'>
+	<link rel='stylesheet' href='/global.css'>
+	<link rel='stylesheet' href='/build/bundle.css'>
+
+	<script defer src='/build/bundle.js'></script>
+	<script src="https://kit.fontawesome.com/690f74afe5.js" crossorigin="anonymous"></script>
+
+	<script>
+		var audio = new Audio();
+		console.log(typeof audio + " " + audio);
+		var queue = [
+			{song_title:'Seasons', song_source:'/test01.mp3', song_artist: 'Kang' , song_image: '/image01.jpg'},
+			{song_title:'Campfire', song_source:'/test02.mp3', song_artist: 'An', song_image: '/image02.jpg'},
+			{song_title:'Rooster', song_source:'/test04.ogg', song_artist: 'Lee', song_image: '/image03.png'}
+		]
+	</script>
+</head>
+
+<body>
+    <div>
+		<img id="songImage" src="/defualt_image.png" alt="" style="width: 100px; height:100px; background-color: gray;">
+		<div id="songTitle">재생할 곡을 선택해주세요</div>
+		<div id="songArtist"></div>
+        <span id="current">0:00</span>
+		<input type="range" id="seekbar" value="0" style="padding: 0;">
+		<span id="total">0:00</span>
+    </div>
+    <div>
+		<button id="pre-button" onclick="pre()"><i class="fas fa-backward"></i></button>
+        <button id="play-button"><i class="fas fa-play"></i></button>
+		<button id="next-button" onclick="next()"><i class="fas fa-forward"></i></button>
+    </div>
+	<div>
+		<button id="change-mute"><i class="fas fa-volume-up"></i></button>
+		<input type="range" id="volume-slider" max="100" value="100" style="padding: 0;">
+	</div>
+	<ol id="queue">
+		<div>현재 재생목록(Queue)</div>
+		<script>
+			for (i=0; i < queue.length; i++) {
+				document.write('<li onclick="playSong( ' + i + ')">' + queue[i].song_title + '</li>');
+			}
+		</script>
+	</ol>
+
+	<script>
+        
+		// current, seekbar 객체 얻기
+		const current = document.getElementById('current');
+		const total = document.getElementById('total');
+		// seekbar 객체 얻기
+		const seekbar = document.getElementById('seekbar');
+		// song title 객체 얻기
+		const songTitle = document.getElementById('songTitle');
+		// song artist 객체 얻기
+		const songArtist = document.getElementById('songArtist');
+		// song image 객체 얻기
+		const songImage = document.getElementById('songImage');
+
+		// mm:ss 시간 단위 변환
+		const calculateTime = (val) => {
+			const minutes = parseInt(val / 60);
+			const seconds = (val % 60);
+			const returnedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
+			
+			return `${minutes}:${returnedSeconds}`;
+		};
+
+		// Audio 객체에 timeupdate 이벤트 처리를 위한 리스너 부착
+		// addEventListener() 함수 사용
+		audio.addEventListener('timeupdate', function () {
+			// 오디오의 총 재생시간 얻고 설정
+			const totaltime = parseInt(audio.duration);
+			total.innerHTML = calculateTime(totaltime);
+
+			// 오디오의 현재 재생시간 얻고 설정
+			const playingtime = parseInt(audio.currentTime);
+			current.innerHTML = calculateTime(playingtime);
+			
+			// 타임 업데이트에 따른 프로그레스 진행정도 표시
+			// 최대값 설정
+			seekbar.max = audio.duration;
+			// 진행 정도
+			seekbar.value = audio.currentTime;
+
+		});
+
+		//오디오 파일 재생이 모두 되어 멈추었을 때 다음 곡을 호출하는 함수
+		audio.addEventListener('ended', function() {
+			next();
+		});
+
+		function playSong(n) {
+			currentSong = n;
+			audio.src = queue[n].song_source;
+			songTitle.textContent = queue[n].song_title;
+			songArtist.textContent = queue[n].song_artist;
+			songImage.src = queue[n].song_image;
+			change_music(audio.src);
+		}
+
+		function next() {
+			currentSong++;
+			if(currentSong > queue.length -1) {
+				currentSong = 0;
+			}
+			playSong(currentSong);
+		}
+
+		function pre() {
+			currentSong--;
+			if(currentSong < 0) {
+				currentSong = queue.length -1;
+			}
+			playSong(currentSong);
+		}
+
+		//seekbar의 위치와 재생 위치 동일하게 설정하는 함수
+        function seekAudio() {
+          audio.currentTime = seekbar.value;
+        }
+
+		//seekbar가 변화 될때마다 재생 위치와 동일하게 갱신
+        seekbar.onchange = seekAudio;
+
+		//재생버튼 객체 얻기
+		const playButton = document.getElementById('play-button');
+
+		//재생버튼 toggle
+		playButton.addEventListener('click', () => {
+			playButton.classList.toggle('play');
+
+			if(playButton.classList == 'play'){
+				audio.play();
+				playButton.innerHTML = `<i class="fas fa-pause"></i>`;
+			}else{
+				audio.pause();
+				playButton.innerHTML = `<i class="fas fa-play"></i>`;
+			}
+		});
+		
+		//음악 변경하기
+		function change_music(music)	{
+			audio.pause();
+			audio.setAttribute('src', music);
+			audio.load();
+			playButton.classList.add('play');
+			audio.play();
+			playButton.innerHTML = `<i class="fas fa-pause"></i>`;
+
+			if(playButton.classList == 'play'){
+				audio.play();
+				playButton.innerHTML = `<i class="fas fa-pause"></i>`;
+			}else{
+				audio.pause();
+				playButton.innerHTML = `<i class="fas fa-play"></i>`;
+			}
+		}
+
+		//볼륨 조절바 객체 얻기
+		const volumeSlider = document.getElementById('volume-slider');
+
+		//볼륨 조절바 객체에 크기조절에 따른 이벤트 처리를 위한 리스너 부착
+		volumeSlider.addEventListener('input', (e) => {
+			const value = e.target.value;
+			audio.volume = value / 100;
+
+			//볼륨크기가 0일때 음소거
+			if(audio.volume == 0) {
+				audio.muted = true;
+				changemute.innerHTML = `<i class="fas fa-volume-mute"></i>`;
+			} else {
+				audio.muted = false;
+				changemute.innerHTML = `<i class="fas fa-volume-up"></i>`;
+			}
+
+		});
+
+		//change-mute 객체 얻기
+		const changemute = document.getElementById('change-mute');
+
+		//음소거, 음소거 취소 toggle 함수 
+		changemute.addEventListener('click', () => {
+			if(audio.muted == false) {
+				audio.muted = true;
+				changemute.innerHTML = `<i class="fas fa-volume-mute"></i>`;
+				volumeSlider.value = 0;
+				
+			} else {
+				audio.muted = false;
+				changemute.innerHTML = `<i class="fas fa-volume-up"></i>`;
+			}
+		});
+
+	</script>
+</body>
+</html>
