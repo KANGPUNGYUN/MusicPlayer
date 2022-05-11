@@ -16,17 +16,20 @@
 	<script>
 		var audio = new Audio();
 		console.log(typeof audio + " " + audio);
-		var queue = [
+		var songList = [
 			{song_title:'Seasons', song_source:'/test01.mp3', song_artist: 'Kang' , song_image: '/image01.jpg'},
 			{song_title:'Campfire', song_source:'/test02.mp3', song_artist: 'An', song_image: '/image02.jpg'},
 			{song_title:'Rooster', song_source:'/test04.ogg', song_artist: 'Lee', song_image: '/image03.png'}
 		]
+		var song = localStorage.getItem("playinglist");
+		var songObject = JSON.parse(song);
 	</script>
 </head>
 
 <body>
+	
     <div>
-		<img id="songImage" src="/defualt_image.png" alt="" style="width: 100px; height:100px; background-color: gray;">
+		<img id="songImage" src="/defualt_image.png" alt="" style="width: 100px; height:100px; background-color: lightblue;">
 		<div id="songTitle">재생할 곡을 선택해주세요</div>
 		<div id="songArtist"></div>
         <span id="current">0:00</span>
@@ -42,17 +45,26 @@
 		<button id="change-mute"><i class="fas fa-volume-up"></i></button>
 		<input type="range" id="volume-slider" max="100" value="100" style="padding: 0;">
 	</div>
-	<ol id="queue">
-		<div>현재 재생목록(Queue)</div>
+	<ol id="songList">
+		<div>전체 재생목록(songList)</div>
 		<script>
-			for (i=0; i < queue.length; i++) {
-				document.write('<li onclick="playSong( ' + i + ')">' + queue[i].song_title + '</li>');
+			for (i=0; i < songList.length; i++) {
+				document.write('<li onclick="addSong( ' + i + ')">' + songList[i].song_title + '</li>');
+			}
+		</script>
+	</ol>
+
+	<ol id="playingList">
+		<div>현재 재생목록(playingList)</div>
+		<script>
+			for (i=0; i < songObject.length; i++) {
+				document.write('<li class="waiting" onclick="playSong( ' + i + ')">' + songObject[i].song_title + '</li>');
 			}
 		</script>
 	</ol>
 
 	<script>
-        
+
 		// current, seekbar 객체 얻기
 		const current = document.getElementById('current');
 		const total = document.getElementById('total');
@@ -64,6 +76,39 @@
 		const songArtist = document.getElementById('songArtist');
 		// song image 객체 얻기
 		const songImage = document.getElementById('songImage');
+
+		function addSong(n){
+			//기존 로컬스토리지에 저장되어있는 현재재생목록 객체 얻기 
+			var oldplayinglist = JSON.parse(localStorage.getItem("playinglist"));
+			
+			//현재재생목록에 음악을 추가하기 전, 현재재생목록에 음악데이터가 없었다면 빈 object 생성
+			if(oldplayinglist == null){
+				oldplayinglist = [];
+			}
+
+			//음악 파일에 각 값을 변수로 설정
+			var songTitleValue = songList[n].song_title;
+			var songArtistValue = songList[n].song_artist;
+			var songSourceValue = songList[n].song_source;
+			var songImageValue = songList[n].song_image;
+
+			//최근에 추가한 음악 object를 위의 변수 값으로 받음
+			var lastsong = {
+				'song_title': songTitleValue, 
+				'song_artist': songArtistValue, 
+				'song_source': songSourceValue, 
+				'song_image': songImageValue
+			};
+
+			//최근 추가 음악 object를 로컬 스토리지에 문자열로 저장
+			localStorage.setItem("lastsong", JSON.stringify(lastsong));
+			//최근에 추가할 음악 데이터를 기존 현재재생목록에 추가
+			oldplayinglist.push(lastsong);
+			//최근에 추가한 음악이 들어있는 현재재생목록을 로컬 스토리지에 문자열로 저장
+			localStorage.setItem("playinglist", JSON.stringify(oldplayinglist));
+			//음악 조회하기
+			getSong();
+        }
 
 		// mm:ss 시간 단위 변환
 		const calculateTime = (val) => {
@@ -98,27 +143,55 @@
 			next();
 		});
 
-		function playSong(n) {
+		function getSong(num) {
+			
+			var song = localStorage.getItem("playinglist");
+			var songObject = JSON.parse(song);
+			var num = songObject.length - 1;
+
+			currentSong = num;
+
+			audio.src = songObject[num].song_source;
+			songTitle.textContent = songObject[num].song_title;
+			songArtist.textContent = songObject[num].song_artist;
+			songImage.src = songObject[num].song_image;
+
+			change_music(audio.src);
+		}
+
+		function playSong(n){
+
+			var song = localStorage.getItem("playinglist");
+			var songObject = JSON.parse(song);
+			
 			currentSong = n;
-			audio.src = queue[n].song_source;
-			songTitle.textContent = queue[n].song_title;
-			songArtist.textContent = queue[n].song_artist;
-			songImage.src = queue[n].song_image;
+			audio.src = songObject[n].song_source;
+			songTitle.textContent = songObject[n].song_title;
+			songArtist.textContent = songObject[n].song_artist;
+			songImage.src = songObject[n].song_image;
 			change_music(audio.src);
 		}
 
 		function next() {
 			currentSong++;
-			if(currentSong > queue.length -1) {
+
+			var song = localStorage.getItem("playinglist");
+			var songObject = JSON.parse(song);
+
+			if(currentSong > songObject.length -1) {
 				currentSong = 0;
 			}
 			playSong(currentSong);
 		}
 
 		function pre() {
+
 			currentSong--;
+
+			var song = localStorage.getItem("playinglist");
+			var songObject = JSON.parse(song);
 			if(currentSong < 0) {
-				currentSong = queue.length -1;
+				currentSong = songObject.length -1;
 			}
 			playSong(currentSong);
 		}
@@ -139,8 +212,13 @@
 			playButton.classList.toggle('play');
 
 			if(playButton.classList == 'play'){
-				audio.play();
-				playButton.innerHTML = `<i class="fas fa-pause"></i>`;
+				if(audio.src == ''){
+					alert('먼저 곡을 선택해주세요');
+					playButton.classList.remove('play');
+				}else{
+					audio.play();
+					playButton.innerHTML = `<i class="fas fa-pause"></i>`;
+				}
 			}else{
 				audio.pause();
 				playButton.innerHTML = `<i class="fas fa-play"></i>`;
@@ -154,6 +232,16 @@
 			audio.load();
 			playButton.classList.add('play');
 			audio.play();
+			
+			const promise = audio.play();
+			promise.catch(function(error) {
+				if(DOMException.NOT_SUPPORTED_ERR){
+					alert("해당 브라우저는 이 오디오 파일을 지원하지 않습니다.(DOMException: NotSupportedError)");
+				}else{
+					alert("사용자가 권한을 거부했기 때문에 현재 요청을 허용하지 않습니다.(DOMException: NotAllowedError)");
+				}
+			})
+
 			playButton.innerHTML = `<i class="fas fa-pause"></i>`;
 
 			if(playButton.classList == 'play'){
