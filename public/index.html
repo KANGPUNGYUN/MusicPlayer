@@ -6,20 +6,22 @@
 
 	<title>Svelte app</title>
 
-	<link rel='icon' type='image/png' href='defualt_image.png'>
-	<link rel='stylesheet' href='global.css'>
-	<link rel='stylesheet' href='build/bundle.css'>
+	<link rel='icon' type='image/png' href='defualt_image.png'> <!-- 윈도우 /defualt_image.png -->
+	<link rel='stylesheet' href='global.css'> <!-- 윈도우 /global.css -->
+	<link rel='stylesheet' href='build/bundle.css'> <!-- 윈도우 /build/bundle.css -->
 
-	<script defer src='build/bundle.js'></script>
+	<script defer src='build/bundle.js'></script> <!-- 윈도우 /build/bundle.js -->
 	<script src="https://kit.fontawesome.com/690f74afe5.js" crossorigin="anonymous"></script>
 
 	<script>
 		var audio = new Audio();
 		console.log(typeof audio + " " + audio);
 		var songList = [
-			{song_title:'Seasons', song_source:'test01.mp3', song_artist: 'Kang' , song_image: 'image01.jpg'},
+			{song_title:'Seasons', song_source:'test01.mp3', song_artist: 'Kang' , song_image: 'image01.jpg'}, // 윈도우 song_source:'/test01.mp3', song_image: '/image01.jpg'
 			{song_title:'Campfire', song_source:'test02.mp3', song_artist: 'An', song_image: 'image02.jpg'},
+			// 윈도우 song_source:'/test02.mp3', song_image: '/image02.jpg'
 			{song_title:'Rooster', song_source:'test04.ogg', song_artist: 'Lee', song_image: 'image03.png'}
+			// 윈도우 song_source:'/test04.oog', song_image: '/image03.png'
 		]
 		var song = localStorage.getItem("playinglist");
 		var songObject = JSON.parse(song);
@@ -29,7 +31,7 @@
 <body>
 	
     <div>
-		<img id="songImage" src="defualt_image.png" alt="" style="width: 100px; height:100px; background-color: lightblue;">
+		<img id="songImage" src="defualt_image.png" alt="" style="width: 100px; height:100px; background-color: lightblue;"> <!-- 윈도우 /defualt_image.png -->
 		<div id="songTitle">재생할 곡을 선택해주세요</div>
 		<div id="songArtist"></div>
         <span id="current">0:00</span>
